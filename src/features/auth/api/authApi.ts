@@ -1,7 +1,10 @@
-const localApiUrl = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-  ? `${window.location.protocol}//${window.location.hostname}:5223`
-  : 'http://localhost:5223'
-const API_URL = (import.meta.env.VITE_SARU_API_URL ?? localApiUrl).replace(/\/$/, '')
+const localApiUrl = `${window.location.protocol}//${window.location.hostname}:5223`
+const productionApiUrl = 'https://saru-engine.onrender.com'
+const configuredApiUrl = import.meta.env.VITE_SARU_API_URL?.trim()
+
+const API_URL = (
+  configuredApiUrl || (import.meta.env.DEV ? localApiUrl : productionApiUrl)
+).replace(/\/$/, '')
 
 export type AuthUser = {
   id: string
