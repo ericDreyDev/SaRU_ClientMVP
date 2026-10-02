@@ -1,0 +1,95 @@
+/* Visual refinements: dynamic controls and image-based weekly menu */
+.public-header .brand img:last-child { display: block; }
+.theme-button .app-icon { width: 18px; height: 18px; color: var(--orange); }
+.password-field .app-icon { width: 22px; height: 22px; color: var(--muted-strong); }
+.brand--mark-only { width: auto; gap: 0; }
+.brand--mark-only img:last-child { display: none !important; }
+
+.compact-reservations { margin-top: 26px; }
+.home-grid { align-items: start; }
+.home-reserve-button {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #fff;
+  background: linear-gradient(97deg, var(--orange), var(--orange-dark));
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(158, 79, 19, .2);
+  font-size: 15px;
+  font-weight: 800;
+}
+.home-reserve-button img { width: 19px; height: 19px; filter: brightness(0) invert(1); }
+.home-reserve-button:hover { box-shadow: 0 13px 28px rgba(158, 79, 19, .28); transform: translateY(-1px); }
+.weekly-menu-card {
+  min-width: 0;
+  margin: 0;
+  padding: 15px;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--control-border);
+  border-radius: 22px;
+  box-shadow: none;
+}
+.menu-card-heading { display: grid; gap: 14px; }
+.menu-card-heading > div:first-child { display: grid; gap: 4px; }
+.menu-card-heading p { color: var(--orange); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.menu-card-heading h2 { color: var(--ink); font-size: 20px; line-height: 1.15; }
+.menu-card-heading > div:first-child > span { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.menu-view-switcher { padding: 4px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; background: var(--surface-soft); border-radius: 12px; }
+.menu-view-switcher button { min-height: 36px; padding: 7px 12px; color: var(--muted-strong); background: transparent; border-radius: 9px; font-size: 10px; font-weight: 800; }
+.menu-view-switcher button.active { color: #fff; background: var(--green); box-shadow: 0 4px 12px rgba(63, 88, 39, .18); }
+.menu-image-frame { margin: 13px 0 0; overflow: hidden; background: #f8eee6; border: 1px solid var(--control-border); border-radius: 15px; }
+.menu-image-button { position: relative; width: 100%; padding: 0; display: block; background: #f8eee6; }
+.menu-image-button img { width: 100%; height: auto; display: block; background: #f8eee6; }
+.menu-image-button > span { position: absolute; right: 8px; bottom: 8px; padding: 6px 8px; color: #fff; background: rgba(35, 49, 24, .82); border-radius: 8px; backdrop-filter: blur(4px); font-size: 8px; font-weight: 800; }
+.weekly-menu-card .menu-image-frame > p { margin: 0; padding: 9px 11px; color: var(--muted); background: var(--surface); border-top: 1px solid var(--control-border); font-size: 9px; line-height: 1.4; }
+.instagram-link { margin-top: 11px; padding: 10px 11px; display: grid; grid-template-columns: 34px minmax(0, 1fr) 16px; gap: 9px; align-items: center; color: var(--ink); background: var(--surface-soft); border-radius: 12px; text-decoration: none; }
+.instagram-link > .app-icon:first-child { width: 34px; height: 34px; padding: 7px; color: var(--orange); background: rgba(229,125,37,.1); border-radius: 10px; }
+.instagram-link > span { min-width: 0; display: grid; gap: 2px; }
+.instagram-link b { font-size: 11px; }
+.instagram-link small { overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.instagram-link > .app-icon:last-child { width: 16px; height: 16px; color: var(--muted); }
+.instagram-link:hover { background: rgba(229,125,37,.08); }
+.menu-lightbox-backdrop { position: fixed; inset: 0; z-index: 150; padding: 10px; display: grid; place-items: center; background: rgba(10, 12, 9, .78); backdrop-filter: blur(5px); }
+.menu-lightbox { width: min(1180px, 100%); max-height: 94svh; overflow: hidden; display: flex; flex-direction: column; color: var(--ink); background: var(--surface-raised); border: 1px solid var(--control-border); border-radius: 20px; box-shadow: 0 24px 80px rgba(0,0,0,.42); }
+.menu-lightbox header { padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--control-border); }
+.menu-lightbox header h2 { color: var(--ink); font-size: 15px; }
+.menu-lightbox header .icon-button { width: 38px; height: 38px; flex: 0 0 auto; }
+.menu-lightbox__scroll { overflow: auto; padding: 10px; background: var(--surface-soft); }
+.menu-lightbox__scroll img { width: 740px; max-width: none; height: auto; display: block; border-radius: 10px; }
+.menu-lightbox__scroll--legend img { width: 1000px; }
+
+:root[data-theme='dark'] .weekly-menu-card { color: var(--ink); background: var(--surface-raised); border-color: var(--control-border); }
+:root[data-theme='dark'] .menu-image-frame { background: #201b18; border-color: #555b50; }
+:root[data-theme='dark'] .menu-view-switcher button.active { color: #182112; background: var(--green); }
+:root[data-theme='dark'] .theme-button .app-icon,
+:root[data-theme='dark'] .password-field .app-icon { filter: none; }
+
+@media (min-width: 560px) {
+  .menu-card-heading { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .menu-view-switcher { min-width: 190px; }
+}
+
+@media (min-width: 900px) {
+  .desktop-sidebar .sidebar-top { justify-content: flex-start; }
+  .desktop-sidebar .brand--mark-only img:first-child { width: 58px; height: 51px; }
+  .weekly-menu-card { padding: 18px; }
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+  .home-reserve-button { min-height: 62px; font-size: 16px; }
+  .menu-lightbox { padding: 0; }
+  .menu-lightbox header { padding: 16px 18px; }
+  .menu-lightbox__scroll { padding: 16px; }
+  .menu-lightbox__scroll img { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .public-header .brand { gap: 8px; }
+  .public-header .brand img:first-child { width: 40px; height: 35px; }
+  .public-header .brand img:last-child { width: 118px; height: 26px; }
+  .public-header .theme-button { width: 40px; height: 40px; min-height: 40px; }
+}
