@@ -11,7 +11,10 @@ export type Reservation = {
   marmita: boolean
   status: ReservationStatus
   price: number
+  deadline: string
 }
+
+export type ReservationDraft = Omit<Reservation, 'id' | 'status' | 'price' | 'deadline'>
 
 export type DaySelection = {
   lunch: boolean
@@ -52,42 +55,34 @@ function addDays(date: Date, amount: number) {
   return result
 }
 
-function startOfCurrentWeek(now = new Date()) {
-  const result = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const day = result.getDay()
-  result.setDate(result.getDate() - (day === 0 ? 6 : day - 1))
-  return result
-}
+export function nextReservationDays(now = new Date()) {
+  let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const dinnerDeadline = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reservationRules.dinnerCutoffHour)
+  if (now > dinnerDeadline) cursor = addDays(cursor, 1)
 
-export function currentWeekDays(now = new Date()) {
-  const monday = startOfCurrentWeek(now)
-  return Array.from({ length: 5 }, (_, index) => addDays(monday, index))
+  const days: Date[] = []
+  while (days.length < 5) {
+    if (cursor.getDay() !== 0 && cursor.getDay() !== 6) days.push(new Date(cursor))
+    cursor = addDays(cursor, 1)
+  }
+  return days
 }
 
 export function formatCurrency(value: number) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 }
 
-export function createInitialReservations(): Reservation[] {
-  const monday = startOfCurrentWeek()
-  const previousMonday = addDays(monday, -7)
-  return [
-    { id: 'sample-1', date: dateKey(addDays(previousMonday, 0)), meal: 'dinner', juice: true, marmita: false, status: 'Consumida', price: 13 },
-    { id: 'sample-2', date: dateKey(addDays(previousMonday, 1)), meal: 'dinner', juice: false, marmita: false, status: 'Cancelada', price: 10 },
-    { id: 'sample-3', date: dateKey(addDays(previousMonday, 4)), meal: 'lunch', juice: false, marmita: true, status: 'Falta', price: 10 },
-    { id: 'sample-4', date: dateKey(addDays(monday, 4)), meal: 'lunch', juice: true, marmita: false, status: 'Em aberto', price: 13 },
-  ]
-}
-
 export function mealLabel(meal: MealType) { return meal === 'lunch' ? 'Almoço' : 'Jantar' }
 
 export function mealAvailability(date: Date, meal: MealType, now = new Date()) {
+  if (date.getDay() === 0 || date.getDay() === 6) return { available: false, reason: 'Fim de semana' }
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   if (target < today) return { available: false, reason: 'Dia encerrado' }
   if (target > today) return { available: true, reason: 'Disponível' }
   const cutoff = meal === 'lunch' ? reservationRules.lunchCutoffHour : reservationRules.dinnerCutoffHour
-  const available = now.getHours() < cutoff
+  const deadline = new Date(now.getFullYear(), now.getMonth(), now.getDate(), cutoff)
+  const available = now <= deadline
   return { available, reason: available ? `Até ${cutoff}h` : `Prazo de ${cutoff}h encerrado` }
 }
 

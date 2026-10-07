@@ -91,6 +91,10 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
   return body as T
 }
 
+export function authenticatedRequest<T>(path: string, init: RequestInit = {}) {
+  return request<T>(path, init, true)
+}
+
 function saveSession(session: AuthSession) {
   accessToken = session.accessToken
   return session

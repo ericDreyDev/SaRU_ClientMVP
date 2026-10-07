@@ -20,8 +20,13 @@ import {
 } from '../features/auth/AuthPages'
 import { DashboardPage } from '../features/home/DashboardPage'
 import { ReservationsPage } from '../features/reservations/ReservationsPage'
-import { createInitialReservations } from '../features/reservations/model'
-import type { Reservation } from '../features/reservations/model'
+import {
+  cancelReservation as cancelReservationRequest,
+  createReservation,
+  getReservations,
+  updateReservation,
+} from '../features/reservations/api/reservationsApi'
+import type { Reservation, ReservationDraft } from '../features/reservations/model'
 import { SettingsPage } from '../features/settings/SettingsPage'
 
 function App() {
@@ -31,7 +36,8 @@ function App() {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [authReady, setAuthReady] = useState(isResetLink)
   const [dark, setDark] = useState(false)
-  const [reservations, setReservations] = useState<Reservation[]>(createInitialReservations)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [reservationsLoading, setReservationsLoading] = useState(false)
   const [toast, setToast] = useState('')
   const [recoveryEmail, setRecoveryEmail] = useState('')
   const resetEmail = resetParameters.get('email') ?? ''
@@ -46,6 +52,7 @@ function App() {
     refreshSession()
       .then((restoredSession) => {
         if (!active) return
+        setReservationsLoading(true)
         setSession(restoredSession)
         setPage('home')
       })
@@ -62,6 +69,8 @@ function App() {
     const timer = window.setTimeout(() => {
       refreshSession().then(setSession).catch(() => {
         setSession(null)
+        setReservations([])
+        setReservationsLoading(false)
         setPage('login')
         setToast('Sua sessão expirou. Entre novamente.')
       })
@@ -69,21 +78,56 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [session])
 
+  const reservationUserId = session?.user.id
+
+  useEffect(() => {
+    if (!reservationUserId) return
+
+    let active = true
+    getReservations(true)
+      .then((loadedReservations) => { if (active) setReservations(loadedReservations) })
+      .catch((requestError) => {
+        if (!active) return
+        setToast(requestError instanceof ApiError ? requestError.message : 'Não foi possível carregar suas reservas.')
+      })
+      .finally(() => { if (active) setReservationsLoading(false) })
+
+    return () => { active = false }
+  }, [reservationUserId])
+
   const toggleTheme = () => setDark((current) => !current)
   const goToLogin = () => { window.history.replaceState({}, '', '/'); setPage('login') }
 
-  const createReservations = (newReservations: Reservation[]) => {
-    setReservations((current) => [...newReservations, ...current])
-    setToast(`${newReservations.length} ${newReservations.length === 1 ? 'reserva confirmada' : 'reservas confirmadas'} com sucesso.`)
+  const createReservations = async (drafts: ReservationDraft[]) => {
+    try {
+      const createdReservations = await Promise.all(drafts.map(createReservation))
+      setReservations((current) => [...createdReservations, ...current])
+      setToast(`${createdReservations.length} ${createdReservations.length === 1 ? 'reserva confirmada' : 'reservas confirmadas'} com sucesso.`)
+    } catch (requestError) {
+      getReservations(true).then(setReservations).catch(() => undefined)
+      throw requestError
+    }
   }
 
-  const cancelReservation = (id: string) => {
-    setReservations((current) => current.map((reservation) => reservation.id === id ? { ...reservation, status: 'Cancelada' } : reservation))
-    setToast('Reserva cancelada.')
+  const cancelReservation = async (id: string) => {
+    try {
+      await cancelReservationRequest(id)
+      setReservations((current) => current.map((reservation) => reservation.id === id ? { ...reservation, status: 'Cancelada' } : reservation))
+      setToast('Reserva cancelada.')
+    } catch (requestError) {
+      setToast(requestError instanceof ApiError ? requestError.message : 'Não foi possível cancelar a reserva.')
+    }
+  }
+
+  const editReservation = async (id: string, draft: ReservationDraft) => {
+    const updatedReservation = await updateReservation(id, draft)
+    setReservations((current) => current.map((reservation) => reservation.id === id ? updatedReservation : reservation))
+    setToast('Reserva atualizada com sucesso.')
   }
 
   const authenticate = async (email: string, password: string) => {
     const authenticatedSession = await login(email, password)
+    setReservationsLoading(true)
     setSession(authenticatedSession)
     setPage('home')
   }
@@ -112,6 +156,7 @@ function App() {
       await logout()
     } finally {
       setSession(null)
+      setReservations([])
       goToLogin()
       setToast('Você saiu da sua conta.')
     }
@@ -128,8 +173,8 @@ function App() {
     {visiblePage === 'forgot-password' && <ForgotPasswordPage dark={dark} onToggle={toggleTheme} onBack={goToLogin} onSubmit={submitRecovery} />}
     {visiblePage === 'recovery-sent' && <RecoverySentPage dark={dark} onToggle={toggleTheme} email={recoveryEmail} onBack={goToLogin} />}
     {visiblePage === 'reset-password' && <ResetPasswordPage dark={dark} onToggle={toggleTheme} email={resetEmail} token={resetToken} onBack={goToLogin} onComplete={completeReset} />}
-    {visiblePage === 'home' && session && <DashboardPage dark={dark} onToggle={toggleTheme} onNavigate={setPage} onLogout={endSession} user={session.user} reservations={reservations} onCreateReservations={createReservations} />}
-    {visiblePage === 'reservations' && session && <ReservationsPage dark={dark} onToggle={toggleTheme} onNavigate={setPage} onLogout={endSession} user={session.user} reservations={reservations} onCancel={cancelReservation} />}
+    {visiblePage === 'home' && session && <DashboardPage dark={dark} onToggle={toggleTheme} onNavigate={setPage} onLogout={endSession} user={session.user} reservations={reservations} reservationsLoading={reservationsLoading} onCreateReservations={createReservations} />}
+    {visiblePage === 'reservations' && session && <ReservationsPage dark={dark} onToggle={toggleTheme} onNavigate={setPage} onLogout={endSession} user={session.user} reservations={reservations} loading={reservationsLoading} onCancel={cancelReservation} onUpdate={editReservation} />}
     {visiblePage === 'settings' && session && <SettingsPage dark={dark} onToggle={toggleTheme} onNavigate={setPage} onLogout={endSession} user={session.user} />}
     {toast && <div className="toast" role="status">{toast}</div>}
   </>
